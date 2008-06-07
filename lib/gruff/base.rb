@@ -1,7 +1,9 @@
 require 'rubygems'
 require 'RMagick'
 
-require File.dirname(__FILE__) + '/deprecated'
+%w( deprecated measurements themes ).each do |sub|
+  require File.dirname(__FILE__) + '/' + sub
+end
 
 # = Gruff. Graphs.
 #
@@ -261,162 +263,6 @@ module Gruff
       @colors = color_list
     end
 
-    # You can set a theme manually. Assign a hash to this method before you
-    # send your data.
-    #
-    #  graph.theme = {
-    #    :colors => %w(orange purple green white red),
-    #    :marker_color => 'blue',
-    #    :background_colors => %w(black grey)
-    #  }
-    #
-    # :background_image => 'squirrel.png' is also possible.
-    #
-    # (Or hopefully something better looking than that.)
-    #
-    def theme=(options)
-      reset_themes()
-      
-      defaults = {
-        :colors => ['black', 'white'],
-        :additional_line_colors => [],
-        :marker_color => 'white',
-        :font_color => 'black',
-        :background_colors => nil,
-        :background_image => nil
-      }
-      @theme_options = defaults.merge options
-
-      @colors = @theme_options[:colors]
-      @marker_color = @theme_options[:marker_color]
-      @font_color = @theme_options[:font_color] || @marker_color
-      @additional_line_colors = @theme_options[:additional_line_colors]
-      
-      render_background
-    end
-
-    # A color scheme similar to the popular presentation software.
-    def theme_keynote
-      # Colors
-      @blue = '#6886B4'
-      @yellow = '#FDD84E'
-      @green = '#72AE6E'
-      @red = '#D1695E'
-      @purple = '#8A6EAF'
-      @orange = '#EFAA43'
-      @white = 'white'
-      @colors = [@yellow, @blue, @green, @red, @purple, @orange, @white]
-
-      self.theme = {
-        :colors => @colors,
-        :marker_color => 'white',
-        :font_color => 'white',
-        :background_colors => ['black', '#4a465a']
-      }
-    end
-
-    # A color scheme plucked from the colors on the popular usability blog.
-    def theme_37signals
-      # Colors
-      @green = '#339933'
-      @purple = '#cc99cc'
-      @blue = '#336699'
-      @yellow = '#FFF804'
-      @red = '#ff0000'
-      @orange = '#cf5910'
-      @black = 'black'
-      @colors = [@yellow, @blue, @green, @red, @purple, @orange, @black]
-
-      self.theme = {
-        :colors => @colors,
-        :marker_color => 'black',
-        :font_color => 'black',
-        :background_colors => ['#d1edf5', 'white']
-      }
-    end
-
-    # A color scheme from the colors used on the 2005 Rails keynote
-    # presentation at RubyConf.
-    def theme_rails_keynote
-      # Colors
-      @green = '#00ff00'
-      @grey = '#333333'
-      @orange = '#ff5d00'
-      @red = '#f61100'
-      @white = 'white'
-      @light_grey = '#999999'
-      @black = 'black'
-      @colors = [@green, @grey, @orange, @red, @white, @light_grey, @black]
-      
-      self.theme = {
-        :colors => @colors,
-        :marker_color => 'white',
-        :font_color => 'white',
-        :background_colors => ['#0083a3', '#0083a3']
-      }
-    end
-
-    # A color scheme similar to that used on the popular podcast site.
-    def theme_odeo
-      # Colors
-      @grey = '#202020'
-      @white = 'white'
-      @dark_pink = '#a21764'
-      @green = '#8ab438'
-      @light_grey = '#999999'
-      @dark_blue = '#3a5b87'
-      @black = 'black'
-      @colors = [@grey, @white, @dark_blue, @dark_pink, @green, @light_grey, @black]
-      
-      self.theme = {
-        :colors => @colors,
-        :marker_color => 'white',
-        :font_color => 'white',
-        :background_colors => ['#ff47a4', '#ff1f81']
-      }
-    end
-
-    # A pastel theme
-    def theme_pastel
-      # Colors
-      @colors = [
-          '#a9dada', # blue
-          '#aedaa9', # green
-          '#daaea9', # peach
-          '#dadaa9', # yellow
-          '#a9a9da', # dk purple
-          '#daaeda', # purple
-          '#dadada' # grey
-        ]
-      
-      self.theme = {
-        :colors => @colors,
-        :marker_color => '#aea9a9', # Grey
-        :font_color => 'black',
-        :background_colors => 'white'
-      }
-    end
-
-    # A greyscale theme
-    def theme_greyscale
-      # Colors
-      @colors = [
-          '#282828', # 
-          '#383838', # 
-          '#686868', # 
-          '#989898', # 
-          '#c8c8c8', # 
-          '#e8e8e8', # 
-        ]
-      
-      self.theme = {
-        :colors => @colors,
-        :marker_color => '#aea9a9', # Grey
-        :font_color => 'black',
-        :background_colors => 'white'
-      }
-    end
-
     # Parameters are an array where the first element is the name of the dataset
     # and the value is an array of values to plot.
     #
@@ -540,64 +386,6 @@ protected
     def calculate_spread # :nodoc:
       @spread = @maximum_value.to_f - @minimum_value.to_f
       @spread = @spread > 0 ? @spread : 1
-    end
-
-    # Calculates size of drawable area, general font dimensions, etc.
-    def setup_graph_measurements
-      @marker_caps_height = @hide_line_markers ? 0 :
-                              calculate_caps_height(@marker_font_size)
-      @title_caps_height = @hide_title ? 0 :
-                              calculate_caps_height(@title_font_size)
-      @legend_caps_height = @hide_legend ? 0 :
-                              calculate_caps_height(@legend_font_size)
-
-      if @hide_line_markers
-        (@graph_left,
-         @graph_right_margin,
-         @graph_bottom_margin) = [@left_margin, @right_margin, @bottom_margin]
-      else
-        longest_left_label_width = 0
-        if @has_left_labels
-          longest_left_label_width =  calculate_width(@marker_font_size,
-                                      labels.values.inject('') { |value, memo| (value.to_s.length > memo.to_s.length) ? value : memo }) * 1.25
-        else
-          longest_left_label_width = calculate_width(@marker_font_size, 
-                          label(@maximum_value.to_f))
-        end
-
-        # Shift graph if left line numbers are hidden
-        line_number_width = @hide_line_numbers && !@has_left_labels ? 
-                              0.0 : 
-                              (longest_left_label_width + LABEL_MARGIN * 2)
-
-        @graph_left = @left_margin + 
-                      line_number_width + 
-                      (@y_axis_label.nil? ? 0.0 : @marker_caps_height + LABEL_MARGIN * 2)
-        # Make space for half the width of the rightmost column label.
-        # Might be greater than the number of columns if between-style bar markers are used.
-        last_label = @labels.keys.sort.last.to_i
-        extra_room_for_long_label = (last_label >= (@column_count-1) && @center_labels_over_point) ?
-          calculate_width(@marker_font_size, @labels[last_label])/2.0 :
-          0
-        @graph_right_margin =   @right_margin + extra_room_for_long_label
-                                
-        @graph_bottom_margin =  @bottom_margin + 
-                                @marker_caps_height + LABEL_MARGIN
-      end
-
-      @graph_right = @raw_columns - @graph_right_margin
-      @graph_width = @raw_columns - @graph_left - @graph_right_margin
-
-      # When @hide title, leave a TITLE_MARGIN space for aesthetics.
-      # Same with @hide_legend
-      @graph_top = @top_margin + 
-                    (@hide_title ? TITLE_MARGIN : @title_caps_height + TITLE_MARGIN * 2) +
-                    (@hide_legend ? LEGEND_MARGIN : @legend_caps_height + LEGEND_MARGIN * 2)
-
-      x_axis_label_height = @x_axis_label.nil? ? 0.0 :
-                              @marker_caps_height + LABEL_MARGIN
-      @graph_bottom = @raw_rows - @graph_bottom_margin - x_axis_label_height
-      @graph_height = @graph_bottom - @graph_top
     end
 
     # Draw the optional labels for the x axis and y axis.
@@ -1025,25 +813,6 @@ private
       else
         value.to_s
       end
-    end
-
-    # Returns the height of the capital letter 'X' for the current font and
-    # size.
-    #
-    # Not scaled since it deals with dimensions that the regular scaling will
-    # handle.
-    def calculate_caps_height(font_size)
-      @d.pointsize = font_size
-      @d.get_type_metrics(@base_image, 'X').height
-    end
-
-    # Returns the width of a string at this pointsize.
-    #
-    # Not scaled since it deals with dimensions that the regular 
-    # scaling will handle.
-    def calculate_width(font_size, text)
-      @d.pointsize = font_size
-      @d.get_type_metrics(@base_image, text.to_s).width
     end
 
   end # Gruff::Base
