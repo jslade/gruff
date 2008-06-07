@@ -60,6 +60,9 @@ module Gruff
     # Example: 0 => 2005, 3 => 2006, 5 => 2007, 7 => 2008
     attr_accessor :labels
 
+    # Labels can be rotated from 0-90 degrees
+    attr_accessor :label_rotation
+
     # Used internally for spacing.
     #
     # By default, labels are centered over the point they represent.
@@ -223,6 +226,8 @@ module Gruff
       @hide_line_markers = @hide_legend = @hide_title = @hide_line_numbers = false
       @center_labels_over_point = true
       @has_left_labels = false
+
+      @label_rotation = 0
 
       @additional_line_values = []      
       @additional_line_colors = []
@@ -390,11 +395,16 @@ protected
 
     # Draw the optional labels for the x axis and y axis.
     def draw_axis_labels
+      draw_x_axis_label
+      draw_y_axis_label
+    end
+
+    def draw_x_axis_label
       unless @x_axis_label.nil?
         # X Axis
         # Centered vertically and horizontally by setting the
         # height to 1.0 and the width to the width of the graph.
-        x_axis_label_y_coordinate = @graph_bottom + LABEL_MARGIN * 2 + @marker_caps_height
+        x_axis_label_y_coordinate = @raw_rows - @x_axis_label_margin
 
         # TODO Center between graph area
         @d.fill = @font_color
@@ -408,7 +418,9 @@ protected
                           @x_axis_label, @scale)
         debug { @d.line 0.0, x_axis_label_y_coordinate, @raw_columns, x_axis_label_y_coordinate }
       end
+    end
 
+    def draw_y_axis_label
       unless @y_axis_label.nil?
         # Y Axis, rotated vertically
         @d.rotation = 90.0
@@ -591,13 +603,15 @@ protected
         @d.fill = @font_color
         @d.font = @font if @font
         @d.stroke('transparent')
+	@d.rotation = @label_rotation
         @d.font_weight = NormalWeight
         @d.pointsize = scale_fontsize(@marker_font_size)
-        @d.gravity = NorthGravity
+	@d.gravity = @label_rotation == 0 ? NorthGravity : NorthWestGravity
         @d = @d.annotate_scaled(@base_image,
                                 1.0, 1.0,
                                 x_offset, y_offset,
                                 @labels[index], @scale)
+	@d.rotation = -@label_rotation
         @labels_seen[index] = 1
         debug { @d.line 0.0, y_offset, @raw_columns, y_offset }
       end

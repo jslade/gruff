@@ -436,6 +436,41 @@ class TestGruffLine < GruffTestCase
     g.write('test/output/line_no_hide.png')
   end
 
+  def test_labels_rotated_90
+    g = Gruff::Line.new
+    g.title = "Labels rotated 90 degrees"
+    g.labels = {
+      0 => '5/6', 
+      1 => '5/15', 
+      2 => '5/24', 
+      3 => '5/30', 
+    }
+    g.data(:apples, [-1, 0, 4, -4])
+    g.data(:peaches, [10, 8, 6, 3])
+    g.hide_line_markers = false
+    g.label_rotation = 90
+    g.x_axis_label = "The x-axis labels are rotated, see?"
+    g.write('test/output/line_labels_rotated_90.png')
+  end
+    
+  def test_labels_rotated_45
+    g = Gruff::Line.new
+    g.title = "Labels rotated 45 degrees"
+    g.labels = {
+      0 => '5/6', 
+      1 => '5/15', 
+      2 => '5/24 long', 
+      3 => '5/30', 
+    }
+    g.data(:apples, [-1, 0, 4, -4])
+    g.data(:peaches, [10, 8, 6, 3])
+    g.hide_line_markers = false
+    g.label_rotation = 45
+    g.x_axis_label = "The x-axis label goes here"
+    g.write('test/output/line_labels_rotated_45.png')
+  end
+
+
 protected
 
   # TODO Reset data after each theme

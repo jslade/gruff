@@ -28,6 +28,7 @@ module Gruff
       @hide_line_markers ? 
         setup_margins_without_markers :
 	setup_margins_with_markers
+      setup_x_axis_label
     end
 
     def setup_margins_without_markers
@@ -37,6 +38,12 @@ module Gruff
     end
     
     def setup_margins_with_markers
+      setup_left_margin_with_markers
+      setup_right_margin_with_markers
+      setup_bottom_margin_with_markers
+    end
+
+    def setup_left_margin_with_markers
       @longest_left_label_width = 0
       if @has_left_labels
 	@longest_left_label_width = 
@@ -53,7 +60,9 @@ module Gruff
       @graph_left = @left_margin + 
 	@line_number_width + 
 	(@y_axis_label.nil? ? 0.0 : @marker_caps_height + LABEL_MARGIN * 2)
-      
+    end
+
+    def setup_right_margin_with_markers
       # Make space for half the width of the rightmost column label.
       # Might be greater than the number of columns if between-style
       # bar markers are used.
@@ -62,25 +71,50 @@ module Gruff
 	(last_label >= (@column_count-1) && @center_labels_over_point) ?
         calculate_width(@marker_font_size, @labels[last_label])/2.0 : 0
       @graph_right_margin = @right_margin + extra_room_for_long_label
-                                
-      @graph_bottom_margin =
-	@bottom_margin + @marker_caps_height + LABEL_MARGIN
     end
 
+    def setup_bottom_margin_with_markers
+      # Height needed for x-axis labels:
+      @labels_height = @marker_caps_height
+
+      @label_rotation = 0 if @label_rotation < 0
+      @label_rotation = 90 if @label_rotation > 90
+
+      if @label_rotation != 0
+	# Get length off longest label,
+	# use that to calculate needed height adjustment
+	# to bottom margin
+	maxlabel = @labels.inject('') { |val,m|
+	  (val.to_s.length > m.to_s.length) ? val : m
+	}
+	rot_margin = calculate_width(@marker_font_size, maxlabel) *
+	  Math.sin(Math::PI * @label_rotation / 180)
+	@labels_height += rot_margin.abs
+      end
+
+      @graph_bottom_margin =
+	@bottom_margin + @labels_height + LABEL_MARGIN
+    end
+
+    def setup_x_axis_label
+      unless @x_axis_label.nil?
+	@x_axis_label_height = @x_axis_label.nil? ? 0.0 :
+	  @marker_caps_height + LABEL_MARGIN
+	@x_axis_label_margin = @bottom_margin + @x_axis_label_height
+	@graph_bottom_margin += @x_axis_label_height
+      end
+    end
 
     def setup_graph_area
       @graph_right = @raw_columns - @graph_right_margin
-      @graph_width = @raw_columns - @graph_left - @graph_right_margin
+      @graph_width = @graph_right - @graph_left
 
       # When @hide title, leave a TITLE_MARGIN space for aesthetics.
       # Same with @hide_legend
       @graph_top = @top_margin + 
 	(@hide_title ? TITLE_MARGIN : @title_caps_height + TITLE_MARGIN * 2) +
 	(@hide_legend ? LEGEND_MARGIN : @legend_caps_height + LEGEND_MARGIN * 2)
-
-      x_axis_label_height = @x_axis_label.nil? ? 0.0 :
-                              @marker_caps_height + LABEL_MARGIN
-      @graph_bottom = @raw_rows - @graph_bottom_margin - x_axis_label_height
+      @graph_bottom = @raw_rows - @graph_bottom_margin
       @graph_height = @graph_bottom - @graph_top
     end
 
@@ -114,29 +148,5 @@ module Gruff
     end
 
   end # Gruff::Base
-
-  # Measurements class keeps track of all measurements for different
-  # regions of the graph.  These measurements are available after
-  # the graph is renderered -- use for testing, use for creating
-  # a region map, etc
-  class Measurements
-    attr_reader :gruff
-    attr_accessor :raw_rows, :raw_columns, :scale
-    attr_accessor :left_margin, :right_margin, :top_margin, :bottom_margin
-    attr_accessor :title_caps_height, :legend_caps_height,
-      :marker_caps_height
-    attr_accessor :longest_left_label_width, :line_number_width
-    attr_accessor :graph_left, :graph_right, :graph_top, :graph_bottom
-    attr_accessor :graph_left_margin, :graph_right_margin,
-      :graph_top_margin, :graph_bottom_margin
-    attr_accessor :graph_width, :graph_height
-    attr_accessor :increment_scaled
-    
-    def initialize(gruff,rows,cols)
-      @gruff = gruff
-    end
-    
-  end # Gruff::Measurements
-  
 
 end # Gruff
