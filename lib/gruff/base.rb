@@ -34,6 +34,7 @@ module Gruff
     DATA_LABEL_INDEX = 0
     DATA_VALUES_INDEX = 1
     DATA_COLOR_INDEX = 2
+    DATA_ATTRS_INDEX = 3
 
     # Space around text elements. Mostly used for vertical spacing
     LEGEND_MARGIN = TITLE_MARGIN = LABEL_MARGIN = 10.0
@@ -184,7 +185,12 @@ module Gruff
         @rows = target_width.to_f * 0.75        
       end
 
-      initialize_ivars
+      # Call any other initializers -- open-ended to allow for
+      # subclass extensions
+      self.class.instance_methods.
+	select{|m| m.to_s =~ /^initialize_/o}.each do |initializer|
+	self.send(initializer)
+      end
 
       reset_themes
       theme_keynote
@@ -237,6 +243,7 @@ module Gruff
       @y_axis_increment = nil
       @stacked = nil
       @norm_data = nil
+
     end
 
     # Sets the top, bottom, left and right margins to +margin+.
@@ -520,23 +527,30 @@ protected
     # to draw them.
     def draw_legend
       return if @hide_legend
+      setup_legend_labels
+      setup_legend_measurements
+      draw_legend_labels
+    end
 
+    def setup_legend_labels
       @legend_labels = @data.collect {|item| item[DATA_LABEL_INDEX] }
+    end
 
-      legend_square_width = @legend_box_size # small square with color of this item
-
+    def setup_legend_measurements
       # May fix legend drawing problem at small sizes
       @d.font = @font if @font
       @d.pointsize = @legend_font_size
 
       metrics = @d.get_type_metrics(@base_image, @legend_labels.join(''))
-      legend_text_width = metrics.width
-      legend_width = legend_text_width + 
-                    (@legend_labels.length * legend_square_width * 2.7)
-      legend_left = (@raw_columns - legend_width) / 2
-      legend_increment = legend_width / @legend_labels.length.to_f
+      @legend_text_width = metrics.width
+      @legend_width = @legend_text_width + 
+                    (@legend_labels.length * @legend_box_size * 2.7)
+      @legend_left = (@raw_columns - @legend_width) / 2
+      @legend_increment = @legend_width / @legend_labels.length.to_f
+    end
 
-      current_x_offset = legend_left
+    def draw_legend_labels
+      current_x_offset = @legend_left
       current_y_offset =  @hide_title ? 
                           @top_margin + LEGEND_MARGIN : 
                           @top_margin + 
@@ -544,36 +558,57 @@ protected
                           LEGEND_MARGIN
 
       debug { @d.line 0.0, current_y_offset, @raw_columns, current_y_offset }
-                                                    
+      
       @legend_labels.each_with_index do |legend_label, index|        
-
-        # Draw label
-        @d.fill = @font_color
-        @d.font = @font if @font
-        @d.pointsize = scale_fontsize(@legend_font_size)
-        @d.stroke('transparent')
-        @d.font_weight = NormalWeight
-        @d.gravity = WestGravity
-        @d = @d.annotate_scaled( @base_image, 
-                          @raw_columns, 1.0,
-                          current_x_offset + (legend_square_width * 1.7), current_y_offset, 
-                          legend_label.to_s, @scale)
-        
-        # Now draw box with color of this dataset
-        @d = @d.stroke('transparent')
-        @d = @d.fill @data[index][DATA_COLOR_INDEX]
-        @d = @d.rectangle(current_x_offset, 
-                          current_y_offset - legend_square_width / 2.0, 
-                          current_x_offset + legend_square_width, 
-                          current_y_offset + legend_square_width / 2.0)
-
-        @d.pointsize = @legend_font_size
-        metrics = @d.get_type_metrics(@base_image, legend_label.to_s)
-        current_string_offset = metrics.width + (legend_square_width * 2.7)
-        current_x_offset += current_string_offset
+	draw_legend_label(legend_label, index,
+			  current_x_offset,current_y_offset)
+	current_x_offset, current_y_offset = 
+	  step_legend_position(current_x_offset,current_y_offset,legend_label)
       end
       @color_index = 0
     end
+
+    def draw_legend_label(legend_label, index,
+			  current_x_offset,current_y_offset)
+      draw_legend_label_box(index, current_x_offset, current_y_offset)
+      draw_legend_label_text(legend_label, index,
+			     current_x_offset, current_y_offset)
+    end
+    
+    def draw_legend_label_text(legend_label, index,
+			       current_x_offset,current_y_offset)
+      @d.fill = @font_color
+      @d.font = @font if @font
+      @d.pointsize = scale_fontsize(@legend_font_size)
+      @d.stroke('transparent')
+      @d.font_weight = NormalWeight
+      @d.gravity = WestGravity
+      @d = @d.annotate_scaled(@base_image, 
+			      @raw_columns, 1.0,
+			      current_x_offset +
+			      (@legend_box_size * 1.7), current_y_offset, 
+			      legend_label.to_s, @scale)
+    end
+
+    def draw_legend_label_box(index,current_x_offset,current_y_offset)
+      # Now draw box with color of this dataset
+      @d = @d.stroke('transparent')
+      @d = @d.fill @data[index][DATA_COLOR_INDEX]
+      @d = @d.rectangle(current_x_offset, 
+			current_y_offset - @legend_box_size / 2.0, 
+			current_x_offset + @legend_box_size, 
+			current_y_offset + @legend_box_size / 2.0)
+    end
+
+    def step_legend_position(current_x_offset,current_y_offset,legend_label)
+      @d.pointsize = @legend_font_size
+      metrics = @d.get_type_metrics(@base_image, legend_label.to_s)
+      current_string_offset = metrics.width + (@legend_box_size * 2.7)
+      current_x_offset += current_string_offset
+      [ current_x_offset, current_y_offset ]
+    end
+
+
 
     # Draws a title on the graph.
     def draw_title

@@ -262,6 +262,25 @@ class TestGruffBar < GruffTestCase
   end
 
 
+  def test_ldata_1
+    g = Gruff::Bar.new(800)
+    g.data(:apples, (0..9).map { rand(20)/10.0 })
+    g.ldata(:fruit, (0..9).map { rand(20)/10.0 })
+    write_test_file g, 'bar_with_1_ldata.png'
+  end
+
+
+  def test_ldata_2
+    g = Gruff::Bar.new(800)
+    g.data(:apples, (0..9).map { rand(20)/10.0 })
+    g.data(:peaches, (0..9).map { rand(20)/10.0 })
+    g.data(:oranges, (0..9).map { rand(20)/10.0 })
+    g.ldata(:good, (0..9).map { rand(20)/10.0 }, :style => [5,5])
+    g.ldata(:bad, (0..9).map { rand(20)/10.0 }, :style => 'dash')
+    write_test_file g, 'bar_with_2_ldata.png'
+  end
+
+
 protected
 
   def setup_basic_graph(size=800)

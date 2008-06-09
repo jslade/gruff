@@ -1,15 +1,24 @@
 
 require File.dirname(__FILE__) + '/base'
 require File.dirname(__FILE__) + '/stacked_mixin'
+require File.dirname(__FILE__) + '/ldata_mixin'
 
 class Gruff::StackedBar < Gruff::Base
     include StackedMixin
+    include LdataMixin
 
     # Draws a bar graph, but multiple sets are stacked on top of each other.
     def draw
       get_maximum_by_stack
       super
       return unless @has_data
+      draw_stacked_bars
+      return unless @has_ldata
+      draw_ldata
+    end
+
+
+    def draw_stacked_bars
 
       # Setup spacing.
       #
@@ -29,7 +38,6 @@ class Gruff::StackedBar < Gruff::Base
           label_center = @graph_left + (@bar_width * point_index) + (@bar_width * spacing_factor / 2.0)
           draw_label(label_center, point_index)
 
-          next if (data_point == 0)
           # Use incremented x and scaled y
           left_x = @graph_left + (@bar_width * point_index)
           left_y = @graph_top + (@graph_height -
@@ -38,11 +46,25 @@ class Gruff::StackedBar < Gruff::Base
           right_x = left_x + @bar_width * spacing_factor
           right_y = @graph_top + @graph_height - height[point_index] - 1
           
-          # update the total height of the current stacked bar
+
+	  # Save the x mid point of the first bar and the x distance between 2
+	  # bars of the same data set to be used to position line data points.
+	  if @has_ldata
+	    line_info = @ldata_offset_and_increment[row_index] ||= Array.new
+	    if point_index == 0
+	      line_info[0] = label_center
+	    else
+	      if line_info[1].nil?
+		line_info[1] = left_x + (right_x - left_x) / 2 - line_info[0]
+	      end
+	    end
+	  end
+
+          next if (data_point == 0)
+	  
+	  # update the total height of the current stacked bar
           height[point_index] += (data_point * @graph_height ) 
-          
           @d = @d.rectangle(left_x, left_y, right_x, right_y)
-          
         end
 
       end

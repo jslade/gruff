@@ -48,5 +48,31 @@ class TestGruffStackedBar < GruffTestCase
     end
     g.write "test/output/stacked_bar_keynote_small.png"
   end
-  
+
+
+  def test_bar_with_1_ldata
+    g = Gruff::StackedBar.new(800)
+    g.title = "Stacked Bar Test with ldata"
+    @datasets.each do |data|
+      g.data(data[0], data[1])
+    end
+    g.ldata(:trend, [ 94, 70, 120, 80 ])
+    g.write "test/output/stacked_bar_with_1_ldata.png"
+  end
+
+
+  def test_bar_with_2_ldata
+    g = Gruff::StackedBar.new(800)
+    g.title = "Stacked Bar Test with ldata"
+    @datasets.each do |data|
+      g.data(data[0], data[1])
+    end
+    g.ldata(:trend, [ 94, 70, 120, 80 ],
+	    :style => [15,5], :line_width => 2, :color => 'grey')
+    g.ldata(:target, [ 140, 150, 160, 170 ],
+	    :style => 'dot', :line_width => 4, :color => 'red' )
+    g.write "test/output/stacked_bar_with_2_ldata.png"
+  end
+
+
 end

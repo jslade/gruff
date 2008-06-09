@@ -1,7 +1,9 @@
 require File.dirname(__FILE__) + '/base'
 require File.dirname(__FILE__) + '/bar_conversion'
+require File.dirname(__FILE__) + '/ldata_mixin'
 
 class Gruff::Bar < Gruff::Base
+  include LdataMixin
 
   def draw
     # Labels will be centered over the left of the bar if
@@ -11,8 +13,10 @@ class Gruff::Bar < Gruff::Base
     
     super
     return unless @has_data
-
     draw_bars
+
+    return unless @has_ldata
+    draw_ldata
   end
 
 protected
@@ -70,8 +74,21 @@ protected
                       (@data.length * @bar_width / 2.0)
         # Subtract half a bar width to center left if requested
         draw_label(label_center - (@center_labels_over_point ? @bar_width / 2.0 : 0.0), point_index)
-      end
 
+        if @has_ldata
+	  # Save the x mid point of the first bar and the x distance between 2
+	  # bars of the same data set to be used to position ldata points.
+	  line_info = @ldata_offset_and_increment[row_index] ||= Array.new
+          if point_index == 0
+            line_info[0] = left_x + (right_x - left_x) / 2
+          else
+            if line_info[1].nil?
+              line_info[1] = left_x + (right_x - left_x) / 2 - line_info[0]
+            end
+          end
+        end
+      end
+      
     end
 
     # Draw the last label if requested
