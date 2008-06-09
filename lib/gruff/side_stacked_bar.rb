@@ -1,5 +1,6 @@
 require File.dirname(__FILE__) + '/base'
 require File.dirname(__FILE__) + '/side_bar'
+require File.dirname(__FILE__) + '/side_mixin'
 require File.dirname(__FILE__) + '/stacked_mixin'
 
 ##
@@ -10,6 +11,7 @@ require File.dirname(__FILE__) + '/stacked_mixin'
 
 class Gruff::SideStackedBar < Gruff::SideBar
   include StackedMixin
+  include SideMixin
 
   def draw
     @has_left_labels = true

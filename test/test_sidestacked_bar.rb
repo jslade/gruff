@@ -55,6 +55,8 @@ class TestGruffSideStackedBar < GruffTestCase
   def test_wide
     g = setup_basic_graph('800x400')
     g.title = "Wide SSBar"
+    g.x_axis_label = "x-axis"
+    g.y_axis_label = "y-axis"
     g.write "test/output/side_stacked_bar_wide.png"
   end
 

@@ -1,9 +1,12 @@
 require File.dirname(__FILE__) + '/base'
+require File.dirname(__FILE__) + '/side_mixin'
 
 ##
 # Graph with individual horizontal bars instead of vertical bars.
 
 class Gruff::SideBar < Gruff::Base
+
+  include SideMixin
 
   def draw
     @has_left_labels = true
