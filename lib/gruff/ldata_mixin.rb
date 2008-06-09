@@ -2,13 +2,6 @@
 module Gruff::Base::LdataMixin
   # add support for trend / target lines on bars and stacked bars
   
-  
-  # These are for customizing the lines in line data
-  attr_accessor :hide_dots, :hide_lines
-  
-  # for testability, expose these internals:
-  attr_reader :has_ldata, :norm_ldata, :has_data
-  
   # Same as data, but you can defined groups of lines.
   # The lines points will be x centered on the bar corresponding to
   # the group.
@@ -114,7 +107,7 @@ module Gruff::Base::LdataMixin
                                                           (@norm_ldata.first[1].size * 4), line_width))
           
           line_x = offset + increment * (point_index)
-          if !@hide_lines and !prev_x.nil? and !prev_y.nil? then
+          if line_width > 0 and !prev_x.nil? and !prev_y.nil?
             @d = @d.line(prev_x, prev_y, line_x, line_y)
           end
           
@@ -125,7 +118,7 @@ module Gruff::Base::LdataMixin
             clip_value_if_greater_than(@columns / 
                                        (@norm_ldata.first[1].size * 2.5), 
                                        dot_width)
-          if !hide_dots and dot_width > 0
+          if dot_width > 0
             @d = @d.circle(line_x, line_y,
                            line_x - circle_radius, line_y)
           end
