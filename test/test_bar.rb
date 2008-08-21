@@ -276,7 +276,7 @@ class TestGruffBar < GruffTestCase
     g.data(:peaches, (0..9).map { rand(20)/10.0 })
     g.data(:oranges, (0..9).map { rand(20)/10.0 })
     g.ldata(:good, (0..9).map { rand(20)/10.0 }, :style => [5,5])
-    g.ldata(:bad, (0..9).map { rand(20)/10.0 }, :style => 'dash')
+    g.ldata(:bad, (0..9).map { rand(20)/10.0 }, :style => 'dash', :dot_width => 5)
     write_test_file g, 'bar_with_2_ldata.png'
   end
 

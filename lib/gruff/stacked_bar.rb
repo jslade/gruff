@@ -11,10 +11,8 @@ class Gruff::StackedBar < Gruff::Base
     def draw
       get_maximum_by_stack
       super
-      return unless @has_data
-      draw_stacked_bars
-      return unless @has_ldata
-      draw_ldata
+      draw_stacked_bars if @has_data
+      draw_ldata if @has_ldata
     end
 
 
@@ -47,17 +45,9 @@ class Gruff::StackedBar < Gruff::Base
           right_y = @graph_top + @graph_height - height[point_index] - 1
           
 
-	  # Save the x mid point of the first bar and the x distance between 2
-	  # bars of the same data set to be used to position line data points.
 	  if @has_ldata
-	    line_info = @ldata_offset_and_increment[row_index] ||= Array.new
-	    if point_index == 0
-	      line_info[0] = label_center
-	    else
-	      if line_info[1].nil?
-		line_info[1] = left_x + (right_x - left_x) / 2 - line_info[0]
-	      end
-	    end
+	    @ldata_offset_and_increment[row_index] ||=
+	      [ label_center, @bar_width ]
 	  end
 
           next if (data_point == 0)

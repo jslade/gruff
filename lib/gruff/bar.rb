@@ -12,11 +12,8 @@ class Gruff::Bar < Gruff::Base
     @center_labels_over_point = (@labels.keys.length > @column_count ? true : false)
     
     super
-    return unless @has_data
-    draw_bars
-
-    return unless @has_ldata
-    draw_ldata
+    draw_bars if @has_data
+    draw_ldata if @has_ldata
   end
 
 protected
@@ -55,7 +52,8 @@ protected
     # iterate over all normalised data
     @norm_data.each_with_index do |data_row, row_index|
 
-      data_row[1].each_with_index do |data_point, point_index|
+      values = data_row[DATA_VALUES_INDEX]
+      values.each_with_index do |data_point, point_index|
         # Use incremented x and scaled y
         # x
         left_x = @graph_left + (@bar_width * (row_index + point_index + ((@data.length - 1) * point_index)))
@@ -75,18 +73,10 @@ protected
         # Subtract half a bar width to center left if requested
         draw_label(label_center - (@center_labels_over_point ? @bar_width / 2.0 : 0.0), point_index)
 
-        if @has_ldata
-	  # Save the x mid point of the first bar and the x distance between 2
-	  # bars of the same data set to be used to position ldata points.
-	  line_info = @ldata_offset_and_increment[row_index] ||= Array.new
-          if point_index == 0
-            line_info[0] = left_x + (right_x - left_x) / 2
-          else
-            if line_info[1].nil?
-              line_info[1] = left_x + (right_x - left_x) / 2 - line_info[0]
-            end
-          end
-        end
+	if @has_ldata
+	  @ldata_offset_and_increment[row_index] ||=
+	    [ label_center, @bar_width * @norm_data.size ]
+	end
       end
       
     end
@@ -97,4 +87,19 @@ protected
     @d.draw(@base_image)
   end
 
+  
+  def calc_ldata_on_bar row_index, point_index, label_center, bar_width
+    # Save the x mid point of the first bar and the x distance between 2
+    # bars of the same data set to be used to position ldata points.
+    line_info = @ldata_offset_and_increment[row_index] ||= Array.new
+    if point_index == 0
+      line_info[0] = label_center
+    else
+      if line_info[1].nil?
+	line_info[1] = label_center - line_info[0]
+      end
+    end
+  end
+
+  
 end
