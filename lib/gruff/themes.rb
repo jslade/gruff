@@ -16,7 +16,7 @@ module Gruff
     #
     def theme=(options)
       reset_themes()
-      
+
       defaults = {
         :colors => ['black', 'white'],
         :additional_line_colors => [],
@@ -31,7 +31,7 @@ module Gruff
       @marker_color = @theme_options[:marker_color]
       @font_color = @theme_options[:font_color] || @marker_color
       @additional_line_colors = @theme_options[:additional_line_colors]
-      
+
       render_background
     end
 
@@ -87,7 +87,7 @@ module Gruff
       @light_grey = '#999999'
       @black = 'black'
       @colors = [@green, @grey, @orange, @red, @white, @light_grey, @black]
-      
+
       self.theme = {
         :colors => @colors,
         :marker_color => 'white',
@@ -107,7 +107,7 @@ module Gruff
       @dark_blue = '#3a5b87'
       @black = 'black'
       @colors = [@grey, @white, @dark_blue, @dark_pink, @green, @light_grey, @black]
-      
+
       self.theme = {
         :colors => @colors,
         :marker_color => 'white',
@@ -120,15 +120,15 @@ module Gruff
     def theme_pastel
       # Colors
       @colors = [
-          '#a9dada', # blue
-          '#aedaa9', # green
-          '#daaea9', # peach
-          '#dadaa9', # yellow
-          '#a9a9da', # dk purple
-          '#daaeda', # purple
-          '#dadada' # grey
-        ]
-      
+        '#a9dada', # blue
+        '#aedaa9', # green
+        '#daaea9', # peach
+        '#dadaa9', # yellow
+        '#a9a9da', # dk purple
+        '#daaeda', # purple
+        '#dadada' # grey
+      ]
+
       self.theme = {
         :colors => @colors,
         :marker_color => '#aea9a9', # Grey
@@ -141,14 +141,14 @@ module Gruff
     def theme_greyscale
       # Colors
       @colors = [
-          '#282828', # 
-          '#383838', # 
-          '#686868', # 
-          '#989898', # 
-          '#c8c8c8', # 
-          '#e8e8e8', # 
-        ]
-      
+        '#282828', #
+        '#383838', #
+        '#686868', #
+        '#989898', #
+        '#c8c8c8', #
+        '#e8e8e8', #
+      ]
+
       self.theme = {
         :colors => @colors,
         :marker_color => '#aea9a9', # Grey

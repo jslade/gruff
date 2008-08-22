@@ -2,6 +2,7 @@
 
 %w(
   base
+  measurements
   area
   bar
   line
@@ -14,6 +15,7 @@
   side_bar
   accumulator_bar
 
+  themes
   scene
 
   mini/legend

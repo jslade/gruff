@@ -1,10 +1,9 @@
 require 'rubygems'
 require 'RMagick'
 
-%w( deprecated measurements themes ).each do |sub|
-  require File.dirname(__FILE__) + '/' + sub
-end
+require File.dirname(__FILE__) + '/deprecated'
 
+##
 # = Gruff. Graphs.
 #
 # Author:: Geoffrey Grosenbach boss@topfunky.com
@@ -17,10 +16,11 @@ end
 # Breijs, Richard Cowin, and a cast of thousands.
 #
 # See Gruff::Base#theme= for setting themes.
+
 module Gruff
 
   # This is the version of Gruff you are using.
-  VERSION = '0.3.2'
+  VERSION = '0.3.5'
 
   class Base
 
@@ -182,7 +182,7 @@ module Gruff
         @rows = geometric_height.to_f
       else
         @columns = target_width.to_f
-        @rows = target_width.to_f * 0.75        
+        @rows = target_width.to_f * 0.75
       end
 
       # Call any other initializers -- open-ended to allow for
@@ -224,7 +224,7 @@ module Gruff
       @marker_font_size = 21.0
       @legend_font_size = 20.0
       @title_font_size = 36.0
-      
+
       @legend_box_size = 20.0
 
       @no_data_message = "No Data"
@@ -238,7 +238,7 @@ module Gruff
       @additional_line_values = []      
       @additional_line_colors = []
       @theme_options = {}
-      
+
       @x_axis_label = @y_axis_label = nil
       @y_axis_increment = nil
       @stacked = nil
@@ -298,7 +298,7 @@ module Gruff
       # Pre-normalize
       data_points.each_with_index do |data_point, index|
         next if data_point.nil?
-        
+
         # Setup max/min so spread starts at the low end of the data points
         if @maximum_value.nil? && @minimum_value.nil?
           @maximum_value = @minimum_value = data_point
@@ -308,9 +308,9 @@ module Gruff
         # Original: @maximum_value = larger_than_max?(data_point, index) ? max(data_point, index) : @maximum_value
         @maximum_value = larger_than_max?(data_point) ? data_point : @maximum_value
         @has_data = true if @maximum_value > 0
-        
+
         @minimum_value = less_than_min?(data_point) ? data_point : @minimum_value
-     	  @has_data = true if @minimum_value < 0
+        @has_data = true if @minimum_value < 0
       end
     end
 
@@ -327,13 +327,13 @@ module Gruff
     def to_blob(fileformat='PNG')
       draw()
       return @base_image.to_blob do
-         self.format = fileformat
+        self.format = fileformat
       end
     end
 
-    
 
-protected
+
+    protected
 
     # Overridden by subclasses to do the actual plotting of the graph.
     #
@@ -341,11 +341,11 @@ protected
     def draw
       make_stacked if @stacked
       setup_drawing
-      
+
       debug {
         # Outer margin
-        @d.rectangle( @left_margin, @top_margin, 
-                            @raw_columns - @right_margin, @raw_rows - @bottom_margin)
+        @d.rectangle( @left_margin, @top_margin,
+        @raw_columns - @right_margin, @raw_rows - @bottom_margin)
         # Graph area box
         @d.rectangle( @graph_left, @graph_top, @graph_right, @graph_bottom)
       }
@@ -362,11 +362,11 @@ protected
         draw_no_data()
         return
       end
-      
+
       normalize()
       setup_graph_measurements()
       sort_norm_data() if @sort # Sort norm_data with avg largest values set first (for display)
-      
+
       draw_legend()
       draw_line_markers()
       draw_axis_labels()
@@ -378,9 +378,9 @@ protected
       if @norm_data.nil? || force
         @norm_data = []
         return unless @has_data
-                
+
         calculate_spread
-        
+
         @data.each do |data_row|
           norm_data_points = []
           data_row[DATA_VALUES_INDEX].each do |data_point|
@@ -419,10 +419,10 @@ protected
         @d.stroke('transparent')
         @d.pointsize = scale_fontsize(@marker_font_size)
         @d.gravity = NorthGravity
-        @d = @d.annotate_scaled( @base_image, 
-                          @raw_columns, 1.0, 
-                          0.0, x_axis_label_y_coordinate, 
-                          @x_axis_label, @scale)
+        @d = @d.annotate_scaled( @base_image,
+        @raw_columns, 1.0,
+        0.0, x_axis_label_y_coordinate,
+        @x_axis_label, @scale)
         debug { @d.line 0.0, x_axis_label_y_coordinate, @raw_columns, x_axis_label_y_coordinate }
       end
     end
@@ -432,10 +432,10 @@ protected
         # Y Axis, rotated vertically
         @d.rotation = 90.0
         @d.gravity = CenterGravity
-        @d = @d.annotate_scaled( @base_image, 
-                          1.0, @raw_rows,
-                          @left_margin + @marker_caps_height / 2.0, 0.0, 
-                          @y_axis_label, @scale)
+        @d = @d.annotate_scaled( @base_image,
+        1.0, @raw_rows,
+        @left_margin + @marker_caps_height / 2.0, 0.0,
+        @y_axis_label, @scale)
         @d.rotation = -90.0
       end
     end
@@ -443,9 +443,9 @@ protected
     # Draws horizontal background lines and labels
     def draw_line_markers
       return if @hide_line_markers
-      
+
       @d = @d.stroke_antialias false
-            
+
       if @y_axis_increment.nil?
         # Try to use a number of horizontal lines that will come out even.
         #
@@ -466,7 +466,7 @@ protected
         @minimum_value = @minimum_value.floor
         calculate_spread
         normalize(true)
-        
+
         @marker_count = (@spread / @y_axis_increment).to_i
         @increment = @y_axis_increment
       end
@@ -475,7 +475,7 @@ protected
       # Draw horizontal line markers and annotate with numbers
       (0..@marker_count).each do |index|
         y = @graph_top + @graph_height - index.to_f * @increment_scaled
-        
+
         @d = @d.stroke(@marker_color)
         @d = @d.stroke_width 1
         @d = @d.line(@graph_left, y, @graph_right, y)
@@ -488,47 +488,65 @@ protected
           @d.stroke('transparent')
           @d.pointsize = scale_fontsize(@marker_font_size)
           @d.gravity = EastGravity
-        
+
           # Vertically center with 1.0 for the height
-          @d = @d.annotate_scaled( @base_image, 
-                            @graph_left - LABEL_MARGIN, 1.0,
-                            0.0, y,
-                            label(marker_label), @scale)
+          @d = @d.annotate_scaled( @base_image,
+          @graph_left - LABEL_MARGIN, 1.0,
+          0.0, y,
+          label(marker_label), @scale)
         end
       end
-      
+
       # # Submitted by a contibutor...the utility escapes me
       # i = 0
       # @additional_line_values.each do |value|
       #   @increment_scaled = @graph_height.to_f / (@maximum_value.to_f / value)
-      # 
+      #
       #   y = @graph_top + @graph_height - @increment_scaled
-      # 
+      #
       #   @d = @d.stroke(@additional_line_colors[i])
       #   @d = @d.line(@graph_left, y, @graph_right, y)
-      # 
-      # 
+      #
+      #
       #   @d.fill = @additional_line_colors[i]
       #   @d.font = @font if @font
       #   @d.stroke('transparent')
       #   @d.pointsize = scale_fontsize(@marker_font_size)
       #   @d.gravity = EastGravity
-      #   @d = @d.annotate_scaled( @base_image, 
+      #   @d = @d.annotate_scaled( @base_image,
       #                     100, 20,
-      #                     -10, y - (@marker_font_size/2.0), 
+      #                     -10, y - (@marker_font_size/2.0),
       #                     "", @scale)
-      #   i += 1   
+      #   i += 1
       # end
-      
+
       @d = @d.stroke_antialias true
     end
 
-    # Draws a legend with the names of the datasets matched to the colors used
-    # to draw them.
+    ##
+    # Return the sum of values in an array.
+    #
+    # Duplicated to not conflict with active_support in Rails.
+
+    def sum(arr)
+      arr.inject(0) { |i, m| m + i }
+    end
+
+    ##
+    # Return a calculation of center
+
+    def center(size)
+      (@raw_columns - size) / 2
+    end
+
+    ##
+    # Draws a legend with the names of the datasets matched
+    # to the colors used to draw them.
+
     def draw_legend
       return if @hide_legend
       setup_legend_labels
-      setup_legend_measurements
+      setup_legend_label_measurements
       draw_legend_labels
     end
 
@@ -536,43 +554,43 @@ protected
       @legend_labels = @data.collect {|item| item[DATA_LABEL_INDEX] }
     end
 
-    def setup_legend_measurements
+    def setup_legend_label_measurements
       # May fix legend drawing problem at small sizes
       @d.font = @font if @font
       @d.pointsize = @legend_font_size
 
-      metrics = @d.get_type_metrics(@base_image, @legend_labels.join(''))
-      @legend_text_width = metrics.width
-      @legend_width = @legend_text_width + 
-                    (@legend_labels.length * @legend_box_size * 2.7)
-      @legend_left = (@raw_columns - @legend_width) / 2
-      @legend_increment = @legend_width / @legend_labels.length.to_f
+      @legend_label_widths = [[]] # Used to calculate line wrap
+      @legend_labels.each do |label|
+        metrics = @d.get_type_metrics(@base_image, label.to_s)
+        label_width = metrics.width + @legend_box_size * 2.7
+        @legend_label_widths.last.push label_width
+
+        if sum(@legend_label_widths.last) > (@raw_columns * 0.9)
+          @legend_label_widths.push [@legend_label_widths.last.pop]
+        end
+      end
     end
 
     def draw_legend_labels
-      current_x_offset = @legend_left
-      current_y_offset =  @hide_title ? 
-                          @top_margin + LEGEND_MARGIN : 
-                          @top_margin + 
-                          TITLE_MARGIN + @title_caps_height +
-                          LEGEND_MARGIN
+      current_x_offset = center(sum(@legend_label_widths.first))
+      current_y_offset =  @hide_title ?
+      @top_margin + LEGEND_MARGIN :
+      @top_margin + TITLE_MARGIN + @title_caps_height + LEGEND_MARGIN
 
-      debug { @d.line 0.0, current_y_offset, @raw_columns, current_y_offset }
-      
-      @legend_labels.each_with_index do |legend_label, index|        
-	draw_legend_label(legend_label, index,
-			  current_x_offset,current_y_offset)
-	current_x_offset, current_y_offset = 
-	  step_legend_position(current_x_offset,current_y_offset,legend_label)
+      @legend_labels.each_with_index do |legend_label, index|
+        draw_legend_label(legend_label,index,
+                          current_x_offset,current_y_offset)
+        current_x_offset, current_y_offset =
+          step_legend_position(current_x_offset,current_y_offset,legend_label)
       end
       @color_index = 0
     end
 
     def draw_legend_label(legend_label, index,
 			  current_x_offset,current_y_offset)
-      draw_legend_label_box(index, current_x_offset, current_y_offset)
       draw_legend_label_text(legend_label, index,
 			     current_x_offset, current_y_offset)
+      draw_legend_label_box(index, current_x_offset, current_y_offset)
     end
     
     def draw_legend_label_text(legend_label, index,
@@ -585,8 +603,8 @@ protected
       @d.gravity = WestGravity
       @d = @d.annotate_scaled(@base_image, 
 			      @raw_columns, 1.0,
-			      current_x_offset +
-			      (@legend_box_size * 1.7), current_y_offset, 
+			      current_x_offset + (@legend_box_size * 1.7),
+                              current_y_offset, 
 			      legend_label.to_s, @scale)
     end
 
@@ -601,13 +619,30 @@ protected
     end
 
     def step_legend_position(current_x_offset,current_y_offset,legend_label)
-      @d.pointsize = @legend_font_size
-      metrics = @d.get_type_metrics(@base_image, legend_label.to_s)
-      current_string_offset = metrics.width + (@legend_box_size * 2.7)
-      current_x_offset += current_string_offset
+      # Handle wrapping
+      first = @legend_label_widths.first
+      first.shift if first
+      if first and first.empty?
+        debug { @d.line 0.0, current_y_offset, @raw_columns, current_y_offset }
+
+        @legend_label_widths.shift # next row
+        current_x_offset = center(sum(@legend_label_widths.first)) unless @legend_label_widths.empty?
+        line_height = [@legend_caps_height, @legend_box_size].max + LEGEND_MARGIN
+        if @legend_label_widths.length > 0
+          # Wrap to next line and shrink available graph dimensions
+          current_y_offset += line_height
+          @graph_top += line_height
+          @graph_height = @graph_bottom - @graph_top
+        end
+      else
+        @d.pointsize = @legend_font_size
+        metrics = @d.get_type_metrics(@base_image, legend_label.to_s)
+        current_string_offset = metrics.width + (@legend_box_size * 2.7)
+        current_x_offset += current_string_offset
+      end
+
       [ current_x_offset, current_y_offset ]
     end
-
 
 
     # Draws a title on the graph.
@@ -620,10 +655,10 @@ protected
       @d.pointsize = scale_fontsize(@title_font_size)
       @d.font_weight = BoldWeight
       @d.gravity = NorthGravity
-      @d = @d.annotate_scaled( @base_image, 
-                        @raw_columns, 1.0,
-                        0, @top_margin, 
-                        @title, @scale)
+      @d = @d.annotate_scaled( @base_image,
+      @raw_columns, 1.0,
+      0, @top_margin,
+      @title, @scale)
     end
 
     # Draws column labels below graph, centered over x_offset
@@ -654,16 +689,16 @@ protected
 
     # Shows an error message because you have no data.
     def draw_no_data
-        @d.fill = @font_color
-        @d.font = @font if @font
-        @d.stroke('transparent')
-        @d.font_weight = NormalWeight
-        @d.pointsize = scale_fontsize(80)
-        @d.gravity = CenterGravity
-        @d = @d.annotate_scaled( @base_image, 
-                        @raw_columns, @raw_rows/2.0,
-                        0, 10, 
-                        @no_data_message, @scale)
+      @d.fill = @font_color
+      @d.font = @font if @font
+      @d.stroke('transparent')
+      @d.font_weight = NormalWeight
+      @d.pointsize = scale_fontsize(80)
+      @d.gravity = CenterGravity
+      @d = @d.annotate_scaled( @base_image,
+      @raw_columns, @raw_rows/2.0,
+      0, 10,
+      @no_data_message, @scale)
     end
 
     # Finds the best background to render based on the provided theme options.
@@ -689,8 +724,8 @@ protected
 
     # Use with a theme definition method to draw a gradiated background.
     def render_gradiated_background(top_color, bottom_color)
-      Image.new(@columns, @rows, 
-          GradientFill.new(0, 0, 100, 0, top_color, bottom_color))
+      Image.new(@columns, @rows,
+      GradientFill.new(0, 0, 100, 0, top_color, bottom_color))
     end
 
     # Use with a theme to use an image (800x600 original) background.
@@ -740,7 +775,7 @@ protected
       data_point > @maximum_value
     end
 
-	  def less_than_min?(data_point, index=0) # :nodoc:
+    def less_than_min?(data_point, index=0) # :nodoc:
       data_point < @minimum_value
     end
 
@@ -750,7 +785,7 @@ protected
     end
 
     # Overridden by subclasses that need it.
-	  def min(data_point, index) # :nodoc:
+    def min(data_point, index) # :nodoc:
       data_point
     end
 
@@ -778,7 +813,7 @@ protected
     # Sort with largest overall summed value at front of array so it shows up
     # correctly in the drawn graph.
     def sort_norm_data
-      @norm_data.sort! { |a,b| sums(b[1]) <=> sums(a[1]) }
+      @norm_data.sort! { |a,b| sums(b[DATA_VALUES_INDEX]) <=> sums(a[DATA_VALUES_INDEX]) }
     end
 
     def sums(data_set) # :nodoc:
@@ -810,14 +845,14 @@ protected
     def make_stacked # :nodoc:
       stacked_values = Array.new(@column_count, 0)
       @data.each do |value_set|
-        value_set[1].each_with_index do |value, index|
+        value_set[DATA_VALUES_INDEX].each_with_index do |value, index|
           stacked_values[index] += value
         end
-        value_set[1] = stacked_values.dup
+        value_set[DATA_VALUES_INDEX] = stacked_values.dup
       end
     end
 
-private
+    private
 
     # Takes a block and draws it if DEBUG is true.
     #
@@ -880,12 +915,11 @@ module Magick
       scaled_height = (height * scale) >= 1 ? (height * scale) : 1
 
       self.annotate( img,
-                      scaled_width, scaled_height,
-                      x * scale, y * scale,
-                      text)
+      scaled_width, scaled_height,
+      x * scale, y * scale,
+      text)
     end
 
   end
 
 end # Magick
-

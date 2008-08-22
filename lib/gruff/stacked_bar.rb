@@ -23,21 +23,22 @@ class Gruff::StackedBar < Gruff::Base
       # Columns sit stacked.
       spacing_factor = 0.9
       @bar_width = @graph_width / @column_count.to_f
+      padding = (@bar_width * (1 - spacing_factor)) / 2
     
       @d = @d.stroke_opacity 0.0
       
       height = Array.new(@column_count, 0)
     
-      @norm_data.each_with_index do |data_row, row_index|
-        @d = @d.fill data_row[DATA_COLOR_INDEX]
-      
-        data_row[1].each_with_index do |data_point, point_index|
+      @norm_data.each_with_index do |data_row, row_index|      
+        data_row[DATA_VALUES_INDEX].each_with_index do |data_point, point_index|
+          @d = @d.fill data_row[DATA_COLOR_INDEX]
+          
           # Calculate center based on bar_width and current row
           label_center = @graph_left + (@bar_width * point_index) + (@bar_width * spacing_factor / 2.0)
           draw_label(label_center, point_index)
 
           # Use incremented x and scaled y
-          left_x = @graph_left + (@bar_width * point_index)
+          left_x = @graph_left + (@bar_width * point_index) + padding
           left_y = @graph_top + (@graph_height -
                                  data_point * @graph_height - 
                                  height[point_index]) + 1

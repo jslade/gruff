@@ -7,6 +7,7 @@ class Gruff::StackedArea < Gruff::Base
   attr_accessor :last_series_goes_on_bottom
   
   def draw
+    get_maximum_by_stack
     super
 
     return unless @has_data
@@ -24,7 +25,7 @@ class Gruff::StackedArea < Gruff::Base
         
       @d = @d.fill data_row[DATA_COLOR_INDEX]
 
-      data_row[1].each_with_index do |data_point, index|
+      data_row[DATA_VALUES_INDEX].each_with_index do |data_point, index|
         # Use incremented x and scaled y
         new_x = @graph_left + (@x_increment * index)
         new_y = @graph_top + (@graph_height - data_point * @graph_height - height[index])
